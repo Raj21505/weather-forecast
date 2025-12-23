@@ -1,10 +1,8 @@
 import requests
-import os
-from dotenv import load_dotenv
+import streamlit as st
 from datetime import datetime
 
-load_dotenv()
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
+API_KEY = st.secrets["OPENWEATHER_API_KEY"]
 
 CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather"
 FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
@@ -12,8 +10,10 @@ FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 def get_current_weather(city):
     params = {"q": city, "appid": API_KEY, "units": "metric"}
     r = requests.get(CURRENT_URL, params=params)
+
     if r.status_code != 200:
         return None
+
     d = r.json()
     return {
         "city": d["name"],
@@ -25,9 +25,11 @@ def get_current_weather(city):
         "wind": d["wind"]["speed"]
     }
 
+
 def get_forecast(city):
     params = {"q": city, "appid": API_KEY, "units": "metric"}
     r = requests.get(FORECAST_URL, params=params)
+
     if r.status_code != 200:
         return None
 
@@ -41,7 +43,6 @@ def get_forecast(city):
         dt = datetime.strptime(item["dt_txt"], "%Y-%m-%d %H:%M:%S")
         date = dt.date()
 
-        # 2-2 hour weather for today
         if date == today:
             hourly_today.append({
                 "time": dt.strftime("%I %p"),
@@ -49,7 +50,6 @@ def get_forecast(city):
                 "icon": item["weather"][0]["icon"]
             })
 
-        # 5-day forecast (one entry per day)
         if date not in five_day and len(five_day) < 5:
             five_day[date.strftime("%d %b")] = {
                 "temp": item["main"]["temp"],
